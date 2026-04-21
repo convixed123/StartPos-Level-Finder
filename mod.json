@@ -8,7 +8,7 @@
 	},
 	"id": "convixed.startpos-level-finder",
 	"name": "StartPos Level Finder",
-	"version": "v1.0.0",
+	"version": "v1.0.1",
 	"developer": "CONVIXED",
 	"description": "Find startpos version of any level!",
 	"links": {
@@ -16,5 +16,8 @@
 	},
 	"dependencies": {
 		"geode.node-ids": ">=v1.23.3"
-	}
+	},
+	"tags": [
+		"utility", "enhancement", "online"
+	]
 }

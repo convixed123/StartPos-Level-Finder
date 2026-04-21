@@ -2,19 +2,25 @@
 
 #include "SpSearchLayer.hpp"
 
+#include "Geode/cocos/cocoa/CCObject.h"
+#include "Geode/cocos/label_nodes/CCLabelBMFont.h"
 #include "Geode/cocos/layers_scenes_transitions_nodes/CCLayer.h"
 #include "Geode/cocos/layers_scenes_transitions_nodes/CCScene.h"
+#include "Geode/cocos/menu_nodes/CCMenu.h"
+#include "Geode/cocos/menu_nodes/CCMenuItem.h"
+#include "Geode/cocos/sprite_nodes/CCSprite.h"
 #include <Geode/binding/GJSearchObject.hpp>
 #include <Geode/binding/FLAlertLayer.hpp>
+#include <string>
 
 using namespace geode::prelude;
 
 std::string SpSearchLayer::levelName;
 int SpSearchLayer::levelID;
 
-std::string SpSearchLayer::customLevelName;
-
 bool SpSearchLayer::active = false;
+
+int page = 0;
 
 SpSearchLayer* SpSearchLayer::create() {
     auto ret = new SpSearchLayer();
@@ -60,6 +66,7 @@ bool SpSearchLayer::init() {
         nullptr
     ));
 
+    updatePageInfo();
     onLoading();
 
     this->updateLayout();
@@ -102,6 +109,44 @@ void SpSearchLayer::guiMain() {
     reloadBtn->setID("reload-button");
     reloadBtn->setPosition({25, 25});
     reloadMenu->addChild(reloadBtn);
+
+    auto nextPageMenu = CCMenu::create(nullptr);
+    nextPageMenu->setID("next-page-menu");
+    nextPageMenu->setAnchorPoint({0, 0});
+    nextPageMenu->setScale(1);
+    nextPageMenu->setContentSize({50, 50});
+    nextPageMenu->setPosition(winSize.width - 46, (winSize.height / 2 - nextPageMenu->getScaledContentSize().height / 2));
+    this->addChild(nextPageMenu, 2);
+
+    auto nextPageSpr = CCSprite::createWithSpriteFrameName("GJ_arrow_03_001.png");
+    nextPageSpr->setFlipX(true);
+
+    auto nextPageBtn = CCMenuItemSpriteExtra::create(
+        nextPageSpr,
+        this,
+        menu_selector(SpSearchLayer::onNextPage)
+    );
+    nextPageBtn->setID("next-page-button");
+    nextPageBtn->setPosition({25, 25});
+    nextPageMenu->addChild(nextPageBtn);
+
+    previousPageMenu = CCMenu::create(nullptr);
+    previousPageMenu->setID("previous-page-menu");
+    previousPageMenu->setVisible(false);
+    previousPageMenu->setAnchorPoint({0, 0});
+    previousPageMenu->setScale(1);
+    previousPageMenu->setContentSize({50, 50});
+    previousPageMenu->setPosition(-2, (winSize.height / 2 - previousPageMenu->getScaledContentSize().height / 2));
+    this->addChild(previousPageMenu, 2);
+
+    auto previousPageBtn = CCMenuItemSpriteExtra::create(
+        CCSprite::createWithSpriteFrameName("GJ_arrow_03_001.png"),
+        this,
+        menu_selector(SpSearchLayer::onPreviousPage)
+    );
+    previousPageBtn->setID("previous-page-button");
+    previousPageBtn->setPosition({25, 25});
+    previousPageMenu->addChild(previousPageBtn);
 }
 
 void SpSearchLayer::guiList() {
@@ -138,7 +183,7 @@ void SpSearchLayer::guiList() {
     searchBtn->setPosition(350, 20);
     searchMenu->addChild(searchBtn, 2);
 
-    auto listMenu = CCMenu::create(nullptr);
+    listMenu = CCMenu::create(nullptr);
     listMenu->setID("list-menu");
     listMenu->setPosition(0, 0);
     this->addChild(listMenu, 3);
@@ -196,6 +241,15 @@ void SpSearchLayer::guiExtra() {
     rightCorner->setContentSize({71.5, 71.5});
     rightCorner->setPosition({(winSize.width - 70.5f), -1});
     this->addChild(rightCorner, 1);
+
+    pageInfo = CCLabelBMFont::create(
+        "",
+        "goldFont.fnt"
+    );
+    pageInfo->setID("page-info");
+    pageInfo->setPosition({winSize.width - 60, winSize.height - 12});
+    pageInfo->setScale(0.5f);
+    this->addChild(pageInfo);
 }
 
 void SpSearchLayer::searchForLevels() {
@@ -208,24 +262,13 @@ void SpSearchLayer::searchForLevels() {
         ((finalLevelName.size() < 20) ? finalLevelName : finalLevelName.erase(20))
     );
 
-    glm->getOnlineLevels(searchObject);
-}
+    auto finalSearchObject = searchObject->getPageObject(page);
 
-void SpSearchLayer::onSearch(CCObject*) {
-    customLevelName = searchBar->getString();
-
-    onReload(nullptr);
-}
-
-void SpSearchLayer::onReload(CCObject*) {
-    onLoading();
-    searchForLevels();
+    glm->getOnlineLevels(finalSearchObject);
 }
 
 void SpSearchLayer::loadLevelsFinished(CCArray* levels, const char*, int) {
     auto winSize = CCDirector::get()->getWinSize();
-
-    auto listMenu = this->getChildByID("list-menu");
 
     if (auto old = listMenu->getChildByID("list-view")) {
         old->removeFromParent();
@@ -242,10 +285,53 @@ void SpSearchLayer::loadLevelsFinished(CCArray* levels, const char*, int) {
 }
 
 void SpSearchLayer::loadLevelsFailed(const char*) {
+    if (auto old = listMenu->getChildByID("list-view")) {
+        old->removeFromParent();
+    }
+
     loadingCircle->setVisible(false);
 }
 
+void SpSearchLayer::onNextPage(CCObject*) {
+    page++;
+
+    previousPageMenu->setVisible(true);
+
+    updatePageInfo();
+    onLoading();
+    searchForLevels();
+}
+
+void SpSearchLayer::onPreviousPage(CCObject*) {
+    if (page == 0) return;
+
+    page--;
+
+    if (page == 0) {
+        previousPageMenu->setVisible(false);
+    }
+
+    updatePageInfo();
+    onLoading();
+    searchForLevels();
+}
+
+void SpSearchLayer::onSearch(CCObject*) {
+    customLevelName = searchBar->getString();
+
+    onReload(nullptr);
+}
+
+void SpSearchLayer::onReload(CCObject*) {
+    onLoading();
+    searchForLevels();
+}
+
 void SpSearchLayer::onLoading() {
+    if (auto old = listMenu->getChildByID("list-view")) {
+        old->removeFromParent();
+    }
+
     loadingCircle->setVisible(true);
 }
 
@@ -256,4 +342,11 @@ void SpSearchLayer::onBack(CCObject*) {
 
 void SpSearchLayer::keyBackClicked() {
     onBack(nullptr);
+}
+
+void SpSearchLayer::updatePageInfo() {
+    pageInfo->setString(
+        fmt::format("{} of {} of 9999", page * 10 + 1, page * 10 + 10).c_str(),
+        "goldFont.fnt"
+    );
 }

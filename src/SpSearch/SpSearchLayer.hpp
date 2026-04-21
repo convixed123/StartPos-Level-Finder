@@ -1,5 +1,7 @@
 #pragma once
 
+#include "Geode/cocos/cocoa/CCObject.h"
+#include "Geode/cocos/label_nodes/CCLabelBMFont.h"
 #include <Geode/Geode.hpp>
 #include <Geode/binding/LevelManagerDelegate.hpp>
 #include <Geode/binding/SetIDPopupDelegate.hpp>
@@ -12,9 +14,11 @@ public:
     static std::string levelName;
     static int levelID;
 
-    static std::string customLevelName;
+    std::string customLevelName;
 
     static bool active;
+
+    int page;
 
     virtual bool init() override;
 
@@ -27,6 +31,9 @@ private:
     LoadingCircle* loadingCircle;
     CustomListView* listView;
     TextInput* searchBar;
+    CCMenu* listMenu;
+    CCMenu* previousPageMenu;
+    CCLabelBMFont* pageInfo;
 
     virtual void loadLevelsFinished(CCArray*, const char*, int) override;
     virtual void loadLevelsFailed(const char*) override;
@@ -41,4 +48,9 @@ private:
 
     void onSearch(CCObject*);
     void onReload(CCObject*);
+
+    void onNextPage(CCObject*);
+    void onPreviousPage(CCObject*);
+
+    void updatePageInfo();
 };

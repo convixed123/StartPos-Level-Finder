@@ -5,6 +5,7 @@
 #include <Geode/modify/LevelCell.hpp>
 #include <Geode/binding/LevelInfoLayer.hpp>
 #include <Geode/binding/GJGameLevel.hpp>
+#include <string>
 
 #include "../SpSearch/SpSearchLayer.hpp"
 #include "../SpSearch/SaveUtils.hpp"
