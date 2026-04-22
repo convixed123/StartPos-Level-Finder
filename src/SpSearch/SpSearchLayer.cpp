@@ -53,6 +53,8 @@ bool SpSearchLayer::init() {
 
     active = true;
 
+    loadFinished = true;
+
     this->setKeyboardEnabled(true);
     this->setKeypadEnabled(true);
 
@@ -93,7 +95,7 @@ void SpSearchLayer::guiMain() {
     backBtn->setPosition({25, 25});
     backButtonMenu->addChild(backBtn);
 
-    auto reloadMenu = CCMenu::create(nullptr);
+    reloadMenu = CCMenu::create(nullptr);
     reloadMenu->setID("reload-menu");
     reloadMenu->setAnchorPoint({0, 0});
     reloadMenu->setScale(1);
@@ -110,7 +112,7 @@ void SpSearchLayer::guiMain() {
     reloadBtn->setPosition({25, 25});
     reloadMenu->addChild(reloadBtn);
 
-    auto nextPageMenu = CCMenu::create(nullptr);
+    nextPageMenu = CCMenu::create(nullptr);
     nextPageMenu->setID("next-page-menu");
     nextPageMenu->setAnchorPoint({0, 0});
     nextPageMenu->setScale(1);
@@ -253,6 +255,9 @@ void SpSearchLayer::guiExtra() {
 }
 
 void SpSearchLayer::searchForLevels() {
+    if (!loadFinished) return;
+    loadFinished = false;
+
     auto glm = GameLevelManager::get();
     glm->m_levelManagerDelegate = this;
 
@@ -274,6 +279,13 @@ void SpSearchLayer::loadLevelsFinished(CCArray* levels, const char*, int) {
         old->removeFromParent();
     }
 
+    reloadMenu->setVisible(true);
+    nextPageMenu->setVisible(true);
+
+    if (page != 0) {
+        previousPageMenu->setVisible(true);
+    }
+
     listView = CustomListView::create(levels, BoomListType::Level, 175, 356);
     listView->retain();
     listView->setID("list-view");
@@ -282,6 +294,8 @@ void SpSearchLayer::loadLevelsFinished(CCArray* levels, const char*, int) {
     listMenu->addChild(listView, 1);
 
     loadingCircle->setVisible(false);
+
+    loadFinished = true;
 }
 
 void SpSearchLayer::loadLevelsFailed(const char*) {
@@ -290,9 +304,13 @@ void SpSearchLayer::loadLevelsFailed(const char*) {
     }
 
     loadingCircle->setVisible(false);
+
+    loadFinished = true;
 }
 
 void SpSearchLayer::onNextPage(CCObject*) {
+    if (!loadFinished) return;
+
     page++;
 
     previousPageMenu->setVisible(true);
@@ -303,6 +321,7 @@ void SpSearchLayer::onNextPage(CCObject*) {
 }
 
 void SpSearchLayer::onPreviousPage(CCObject*) {
+    if (!loadFinished) return;
     if (page == 0) return;
 
     page--;
@@ -331,6 +350,10 @@ void SpSearchLayer::onLoading() {
     if (auto old = listMenu->getChildByID("list-view")) {
         old->removeFromParent();
     }
+
+    reloadMenu->setVisible(false);
+    nextPageMenu->setVisible(false);
+    previousPageMenu->setVisible(false);
 
     loadingCircle->setVisible(true);
 }

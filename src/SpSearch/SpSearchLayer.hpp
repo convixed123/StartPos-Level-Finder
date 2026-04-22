@@ -2,6 +2,7 @@
 
 #include "Geode/cocos/cocoa/CCObject.h"
 #include "Geode/cocos/label_nodes/CCLabelBMFont.h"
+#include "Geode/cocos/menu_nodes/CCMenu.h"
 #include <Geode/Geode.hpp>
 #include <Geode/binding/LevelManagerDelegate.hpp>
 #include <Geode/binding/SetIDPopupDelegate.hpp>
@@ -18,8 +19,6 @@ public:
 
     static bool active;
 
-    int page;
-
     virtual bool init() override;
 
     static SpSearchLayer* create();
@@ -31,9 +30,15 @@ private:
     LoadingCircle* loadingCircle;
     CustomListView* listView;
     TextInput* searchBar;
+    CCMenu* reloadMenu;
     CCMenu* listMenu;
+    CCMenu* nextPageMenu;
     CCMenu* previousPageMenu;
     CCLabelBMFont* pageInfo;
+
+    int page;
+
+    bool loadFinished;
 
     virtual void loadLevelsFinished(CCArray*, const char*, int) override;
     virtual void loadLevelsFailed(const char*) override;
